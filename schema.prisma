@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String?
+  password      String
+  tokens        Int           @default(1000)
+  isAdmin       Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  transactions  Transaction[]
+  
+  @@map("users")
+}
+
+model Person {
+  id            String        @id @default(cuid())
+  name          String
+  category      String
+  description   String?
+  emoji         String        @default("👤")
+  imageUrl      String?       // Photo URL
+  totalBoosts   Int           @default(0)
+  supporters    Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  transactions  Transaction[]
+  
+  @@map("people")
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  personId    String?
+  type        String   // "boost", "purchase", "refund"
+  amount      Int
+  description String?
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  person      Person?  @relation(fields: [personId], references: [id], onDelete: SetNull)
+  
+  @@map("transactions")
+  @@index([userId])
+  @@index([personId])
+}
